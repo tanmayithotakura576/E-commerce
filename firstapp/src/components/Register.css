@@ -1,0 +1,103 @@
+/* Background */
+.register-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Background image */
+  background-image: url('../assets/register-bg.png'); /* Replace with correct path */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  font-family: "Segoe UI", sans-serif;
+}
+
+/* Register card - smaller */
+.register-card {
+  width: 100%;
+  max-width: 360px; /* reduced from 420px */
+  padding: 28px;
+
+  background: rgba(255, 255, 255, 0.9); /* semi-transparent to show background */
+  border-radius: 20px;
+
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  color: #222;
+}
+
+/* Headings */
+.title {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #111;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 13px;
+  color: #444; /* darker to contrast background */
+  margin-bottom: 24px;
+}
+
+/* Input fields */
+.field {
+  margin-bottom: 16px;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333; /* darker to stand out */
+  display: block;
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 11px 12px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  color: #222;
+  font-size: 14px;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field input::placeholder {
+  color: #aaa;
+}
+
+.field input:focus {
+  border-color: #4a90e2; /* match new button hover */
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Button - updated color */
+.register-btn {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #4a90e2; /* blue suits light purple background */
+  color: #fff;
+
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.register-btn:hover {
+  background: #357ABD; /* darker blue on hover */
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(53, 122, 189, 0.35);
+}
