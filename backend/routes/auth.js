@@ -30,12 +30,14 @@ route.post("/create-user", async (req, res) => {
 route.post("/login",async (req,res)=>{
     try{
         const {email,password}=req.body 
+        console.log("from login",email,password)
         const adminEmail="admin@gmail.com"
         const adminPassword="Admin1@"
         if(adminEmail==email && adminPassword==password){
             return res.status(200).json({"message":"Admin login successful", role:"admin"})
         }
         const user=await User.findOne({email})
+        console.log("user checking",user)
         if(!user){
             return res.status(400).json({"message":"Invalid email"})
         }
