@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import axios from "axios"
 import "./Login.css"
+import Swal from 'sweetalert2'
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -14,17 +15,20 @@ export default function Login() {
 
     try {
       const response = await axios.post(
-        "http://localhost:4000/api/login",
+        "https://e-commerce-5sqx.onrender.com/api/login",
         newUser
       )
-
       if (response.status === 200) {
         localStorage.setItem("userId", response.data.userId)
         localStorage.setItem("role", response.data.role)
         navigate("/")
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed")
+      Swal.fire({
+        title: "Login Failed!",
+        text: err.response?.data?.message || "Invalid credentials",
+        icon: "error"
+      })
     }
   }
 

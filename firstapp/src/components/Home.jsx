@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import Swal from 'sweetalert2'
 
 export default function Home() {
   const [products, setProducts] = useState([])
@@ -15,20 +16,33 @@ export default function Home() {
     console.log(productId,role)
     const userId=localStorage.getItem("userId")
     if(!userId){
-      alert("Login first to access the products")
+      Swal.fire({
+        title: "Not Logged In",
+        text: "Please log in to add products to your cart.",
+        icon: "warning"
+      });
       return false
     }
-    axios.post("http://localhost:4000/api/cart/add",
+    axios.post("https://e-commerce-5sqx.onrender.com/api/cart/add",
       {productId, quantity:1}, 
       {params:{userId}
     })
       .then(res=>{
         if(res.status==200){
-          alert("Product added successfully to cart")
+          Swal.fire({
+            title: "Product Added to Cart!",
+            text: "The product has been added to your cart.",
+            icon: "success"
+          });
+
           navigate("/cart")
         }
         else{
-          alert(res.data.message)
+          Swal.fire({
+            title: "Failed to Add Product!",
+            text: res.data.message,
+            icon: "error"
+          });
         }
       })
       .catch(err=>{
@@ -37,7 +51,7 @@ export default function Home() {
   }
 
   async function fetchProducts() {
-    axios.get("http://localhost:4000/api/product")
+    axios.get("https://e-commerce-5sqx.onrender.com/api/product")
       .then((res) => {
         console.log(res.data)
         if (res.status == 200) {

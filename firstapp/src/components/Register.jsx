@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import "./Register.css"
+import Swal from 'sweetalert2'
 
 export default function Register() {
   const [name, setName] = useState("")
@@ -24,13 +25,21 @@ export default function Register() {
     }
 
     axios
-      .post("http://localhost:4000/api/create-user", newUser)
+      .post("https://e-commerce-5sqx.onrender.com/api/create-user", newUser)
       .then((res) => {
-        alert("Register successful")
+        Swal.fire({
+          title: "Registration Successful!",
+          text: "You have been registered successfully.",
+          icon: "success"
+        });
         navigate("/login")
       })
-      .catch(() => {
-        alert("Error while registering")
+      .catch((err) => {
+        Swal.fire({
+          title: "Registration Failed!",
+          text: "There was an error during registration.",
+          icon: "error"
+        });
       })
   }
 

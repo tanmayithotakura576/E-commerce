@@ -1,61 +1,146 @@
-const express =require("express")
-const router=express.Router()
-const Cart = require("../models/Cart.js")
-const Product = require("../models/Product.js") 
+const express = require("express");
+const router = express.Router();
+const Cart = require("../models/Cart.js");
+const Product = require("../models/Product.js");
 
-const isAuthenticated=(req,res,next)=>{
-    const userId= req.query.userId 
-    console.log(userId)
-    if(!userId){
-        return res.status(401).json({"message":"Unauthorized. Login first "})
-    }
-    req.userId=userId
-    next()
-}
+// Middleware: check user
+const isAuthenticated = (req, res, next) => {
+  const userId = req.query.userId;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized. Login first." });
+  }
+  req.userId = userId;
+  next();
+};
 
-router.get("/",isAuthenticated,async(req,res)=>{
-  try{
-    const cart= await Cart.findOne({user:req.userId}).populate("items.product")
-    if (!cart){
-        return res.status(200).json({items:[]})
-    }
-    return res.status(200).json(cart)
-  } catch(err){
-    console.log("error while adding products to cart",err)
-    return res.status(500).json({"message":"Internal server error"})
-  } 
-})
+// =====================
+// GET CART ITEMS
+// =====================
+router.get("/", isAuthenticated, async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ user: req.userId }).populate("items.product");
+    if (!cart) return res.status(200).json({ items: [] });
+    res.status(200).json({ items: cart.items });
+  } catch (err) {
+    console.log("Error fetching cart:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
-router.post("/add",isAuthenticated,async (req,res)=>{
-  const {productId,quantity}=req.body
-  console.log(productId)
-  try{
-    let cart=await Cart.findOne({user:req.userId})
-    console.log(productId,cart)
-    if(!cart){
-      cart = new Cart({user:req.userId,items:[]})
-    }
-    const existingItem= cart.items.find((item)=>item.product.toString()==productId) 
-    if(existingItem){
-      existingItem.quantity+=quantity
-      await cart.save()
-      return res.status(200).json({"message":"cart updated successfully"})
+// =====================
+// ADD ITEM TO CART
+// =====================
+router.post("/add", isAuthenticated, async (req, res) => {
+  const { productId, quantity } = req.body;
 
+  try {
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    if (product.stock < quantity) {
+      return res.status(400).json({ message: "Not enough stock" });
     }
-    else{
-      const product = await Product.findById(productId)
-      if(!product){
-        return res.status(404).json({"message":"Product not found or out of stock"})
+
+    let cart = await Cart.findOne({ user: req.userId });
+    if (!cart) cart = new Cart({ user: req.userId, items: [] });
+
+    const existingItem = cart.items.find(
+      (item) => item.product.toString() === productId
+    );
+
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      cart.items.push({ product: productId, quantity });
+    }
+
+    // 🔥 Decrease stock
+    product.stock -= quantity;
+
+    await product.save();
+    await cart.save();
+
+    const updatedCart = await Cart.findOne({ user: req.userId }).populate("items.product");
+    res.status(200).json({ items: updatedCart.items });
+  } catch (err) {
+    console.log("Error adding to cart:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// =====================
+// REMOVE ITEM FROM CART
+// =====================
+router.post("/remove", isAuthenticated, async (req, res) => {
+  const { productId } = req.body;
+
+  try {
+    const cart = await Cart.findOne({ user: req.userId });
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
+
+    const item = cart.items.find(
+      (i) => i.product.toString() === productId
+    );
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    // 🔥 Restore stock
+    const product = await Product.findById(productId);
+    product.stock += item.quantity;
+    await product.save();
+
+    cart.items = cart.items.filter(
+      (i) => i.product.toString() !== productId
+    );
+
+    await cart.save();
+
+    const updatedCart = await Cart.findOne({ user: req.userId }).populate("items.product");
+    res.status(200).json({ items: updatedCart.items });
+  } catch (err) {
+    console.log("Error removing item:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// =====================
+// UPDATE QUANTITY (+ / -)
+// =====================
+router.post("/update-quantity", isAuthenticated, async (req, res) => {
+  const { productId, increment } = req.body;
+
+  try {
+    const cart = await Cart.findOne({ user: req.userId }).populate("items.product");
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
+
+    const item = cart.items.find(
+      (i) => i.product._id.toString() === productId
+    );
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    const product = await Product.findById(productId);
+
+    if (increment) {
+      if (product.stock <= 0) {
+        return res.status(400).json({ message: "Out of stock" });
       }
-      cart.items.push({product:productId, quantity})
-      await cart.save()
-      return res.status(200).json({"message":"added successfully"})
+      item.quantity += 1;
+      product.stock -= 1;
+    } else {
+      if (item.quantity > 1) {
+        item.quantity -= 1;
+        product.stock += 1;
+      }
     }
-  }
-  catch(err){
-    console.log("error while adding to cart",err)
-    return res.status(500).json({"message":"internal server error while adding to cart"})
-  }
-})
 
-module.exports=router
+    await product.save();
+    await cart.save();
+
+    const updatedCart = await Cart.findOne({ user: req.userId }).populate("items.product");
+    res.status(200).json({ items: updatedCart.items });
+  } catch (err) {
+    console.log("Error updating quantity:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+module.exports = router;

@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import Swal from 'sweetalert2'
+
 export default function AddProduct() {
     const [name,setName]=useState("")
     const [price,setPrice]=useState("")
@@ -12,18 +14,26 @@ export default function AddProduct() {
     async function addProduct(e){
         e.preventDefault()
         const newProduct={
-            name,price,description,category,stock:Number(stock),role
+          name,price,description,category,stock:Number(stock),role
         }
-        axios.post("http://localhost:4000/api/product/add",newProduct)
+        axios.post("https://e-commerce-5sqx.onrender.com/api/product/add",newProduct)
           .then((res)=>{
             console.log(res)
             if(res.status==200){
-              alert("Product added successfull")
+              Swal.fire({
+                title: "Product Added!",
+                text: "The product has been added successfully.",
+                icon: "success"
+              });
               navigate("/")
             }
           })
           .catch((err)=>{
-            alert(err.response.data.message)
+            Swal.fire({
+              title: "Product Addition Failed!",
+              text: err.response.data.message,
+              icon: "error"
+            });
           })
     }
 
